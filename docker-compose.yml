@@ -1,0 +1,45 @@
+version: '3'
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+      - microservice
+
+  server:
+    build: ./server
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+
+  client:
+    build: ./client
+    # Include client service configuration if needed
+
+  microservice:
+    build: ./microservice
+    # Remove 'ports' if not needed to be exposed
+  redis-service:
+    build: ./redis-service
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    # Expose port only if needed for external access
+    # ports:
+    #   - "6379:6379"
+
+volumes:
+  redis-data:
+    # Persistent data volume for Redis
+
+# Uncomment this for custom network settings
+# networks:
+#   default:
+#     driver: bridge
