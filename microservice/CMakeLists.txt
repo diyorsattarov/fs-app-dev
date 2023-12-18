@@ -6,7 +6,7 @@ project(${PROJECT_NAME})
 add_executable(microservice src/microservice.cpp)
 
 # Find Boost libraries
-find_package(Boost 1.71.0 REQUIRED COMPONENTS system thread)
+find_package(Boost 1.74.0 REQUIRED COMPONENTS system thread)
 find_package(spdlog REQUIRED)
 
 # Link Boost libraries

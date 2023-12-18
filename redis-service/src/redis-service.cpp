@@ -1,47 +1,55 @@
 #include <sw/redis++/redis++.h>
 #include <iostream>
-#include <string>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <vector>
+
+void initialize_logging() {
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/redis-service.log", true);
+    std::vector<spdlog::sink_ptr> sinks = {console_sink, file_sink};
+
+    auto combined_logger = std::make_shared<spdlog::logger>("combined", sinks.begin(), sinks.end());
+    spdlog::register_logger(combined_logger);
+    spdlog::set_default_logger(combined_logger);
+    spdlog::set_level(spdlog::level::info);
+}
 
 int main(int argc, char* argv[]) {
-    try {
-        // Initialize Redis client
-        auto redis = sw::redis::Redis("tcp://redis:6379");
+    initialize_logging();
+    spdlog::info("Redis service starting...");
 
-        // Check if enough arguments are passed (program name, command, key, and optionally value)
-        if (argc < 3) {
-            std::cerr << "Usage: " << argv[0] << " [SET key value] or [GET key]" << std::endl;
+    try {
+        auto redis = sw::redis::Redis("tcp://redis:6379");
+        if (argc < 2) {
+            spdlog::error("Usage: {} [SET/GET] [key] [value (for SET)]", argv[0]);
             return 1;
         }
 
         std::string command = argv[1];
-        std::string key = argv[2];
-
-        if (command == "SET") {
-            if (argc != 4) {
-                std::cerr << "SET command requires a key and a value." << std::endl;
-                return 1;
-            }
+        if (command == "SET" && argc == 4) {
+            std::string key = argv[2];
             std::string value = argv[3];
             redis.set(key, value);
-            std::cout << "OK" << std::endl;
-
-        } else if (command == "GET") {
+            spdlog::info("Set key '{}' with value '{}'", key, value);
+        } else if (command == "GET" && argc == 3) {
+            std::string key = argv[2];
             auto val = redis.get(key);
             if (val) {
-                std::cout << *val << std::endl;
+                spdlog::info("Value for key '{}': {}", key, *val);
             } else {
-                std::cout << "(nil)" << std::endl;
+                spdlog::info("Key '{}' does not exist", key);
             }
-
         } else {
-            std::cerr << "Unsupported command: " << command << std::endl;
+            spdlog::error("Invalid command or arguments");
             return 1;
         }
-
     } catch (const std::exception& e) {
-        std::cerr << "Redis++ exception: " << e.what() << std::endl;
-        return 1;
+        spdlog::error("Exception: {}", e.what());
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    spdlog::info("Redis service exiting...");
+    return EXIT_SUCCESS;
 }

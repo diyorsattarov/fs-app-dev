@@ -30,7 +30,7 @@ void handle_request(tcp::socket& socket) {
             res.body() = "Hello from C++ microservice";
         } else if (target == "/hello") {
             res.result(http::status::ok);
-            res.body() = "Hello, world!";
+            res.body() = "Hello, from /hello!";
         } else {
             res.result(http::status::not_found);
             res.body() = "Not Found";

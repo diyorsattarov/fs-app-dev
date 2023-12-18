@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     make \
     git \
     wget \
+    libboost-all-dev \
     libspdlog-dev
 
 # Install the latest CMake
